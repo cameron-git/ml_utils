@@ -1,0 +1,8 @@
+{
+  "bos_token": "<|begin_of_text|>",
+  "eos_token": "<|end_of_text|>",
+  "clean_up_tokenization_spaces": true,
+  "model_input_names": ["input_ids", "attention_mask"],
+  "model_max_length": 128,
+  "tokenizer_class": "PreTrainedTokenizerFast"
+}
