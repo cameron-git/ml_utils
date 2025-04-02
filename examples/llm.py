@@ -11,11 +11,11 @@ from tqdm.auto import trange
 
 import ml_utils as mu
 
-
 # Environment Hyperparameters
 
 project_dir = "."
-
+run_name = "llm"
+wandb_project_name = "ut"
 
 # Reproducibility
 
@@ -27,7 +27,7 @@ np.random.seed(0)
 # Architecture Hyperparameters
 
 vocab_size = 256
-hidden_dim = 256
+embed_dim = 256
 num_layers = 4
 num_heads = 8
 head_dim = 32
@@ -35,6 +35,7 @@ mlp_dim = 1024
 seq_len = 128
 mask_block_size = 1
 metric_names = ["loss", "perplexity"]
+
 
 # Training Hyperparameters
 
@@ -47,12 +48,32 @@ learning_rate = 1e-3
 warmup_steps = train_steps // 10
 weight_decay = 1e-4
 adam_betas = (0.9, 0.95)
+adam_betas = (0.9, 0.999)
 mixed_precision = "bf16"
 gradient_accumulation_steps = 1  # TODO: Implement gradient accumulation
 use_cpu = False
 
 
+# Accelerator
+
+trackers = [
+    mu.trackers.AimTracker(run_name=run_name, logging_dir=project_dir),
+    mu.trackers.SimpleGeneralTracker(run_name=run_name, logging_dir=project_dir),
+    mu.trackers.WandBTracker(project_name=wandb_project_name, run_name=run_name),
+]
+
+accelerator = Accelerator(
+    mixed_precision=mixed_precision,
+    log_with=trackers,
+    gradient_accumulation_steps=gradient_accumulation_steps,
+    cpu=use_cpu,
+    # rng_types=None, # TODO: Implement RNG types
+    project_dir=project_dir,
+)
+
+
 # Data
+
 dataset_name = "karpathy/tiny_shakespeare"
 tokenizer_path = "./tokenizers/bytelevel"
 dataset = datasets.load_dataset(dataset_name)
@@ -108,7 +129,16 @@ test_loader = DataLoader(
 
 # Model
 
-model = None
+model = mu.models.Llama(
+    vocab_size=vocab_size,
+    num_layers=num_layers,
+    embed_dim=embed_dim,
+    head_dim=head_dim,
+    num_heads=num_heads,
+    mlp_dim=mlp_dim,
+    max_seq_len=seq_len,
+    mask_block_size=mask_block_size,
+)
 model = torch.compile(model)
 optimizer = torch.optim.AdamW(
     model.parameters(),
@@ -124,12 +154,13 @@ lr_scheduler = mu.lr_schedulers.get_lr_scheduler(
     scheduler_type="cosine",
 )
 
-# Train
+
+# Kwargs
 
 kwargs = {
     "project_dir": project_dir,
     "vocab_size": vocab_size,
-    "hidden_dim": hidden_dim,
+    "embed_dim": embed_dim,
     "num_layers": num_layers,
     "num_heads": num_heads,
     "head_dim": head_dim,
@@ -152,6 +183,13 @@ kwargs = {
     "dataset": dataset_name,
     "metric_names": metric_names,
 }
+accelerator.init_trackers(
+    run_name,
+    kwargs,
+)
+
+
+# Train
 
 mu.train.train(
     model=model,
@@ -160,6 +198,7 @@ mu.train.train(
     val_loader=val_loader,
     test_loader=test_loader,
     lr_scheduler=lr_scheduler,
+    accelerator=accelerator,
     **kwargs,
 )
 
@@ -171,7 +210,7 @@ if test_loader is not None:
         model=model,
         split="test",
         test_loader=test_loader,
-        accelerator=mu.train.accelerator,
+        accelerator=accelerator,
         progress=None,
         metric_names=metric_names,
         step=train_steps,

@@ -256,13 +256,18 @@ class WandBTracker(GeneralTracker):
     main_process_only = False
 
     @on_main_process
-    def __init__(self, run_name: str, **kwargs):
+    def __init__(
+        self,
+        project_name: str,
+        run_name: str,
+        **kwargs,
+    ):
         super().__init__()
         self.run_name = run_name
 
         import wandb
 
-        self.run = wandb.init(project=self.run_name, **kwargs)
+        self.run = wandb.init(project=project_name, name=self.run_name, **kwargs)
 
     @property
     def tracker(self):

@@ -4,7 +4,9 @@ from accelerate import Accelerator
 from tqdm.auto import trange
 from typing import Callable
 
-import ml_utils as mu
+from .train_step import train_step as mu_train_step
+from ..metrics import log_metrics
+from ..eval.test import test
 
 __all__ = ["train"]
 
@@ -13,23 +15,14 @@ def train(
     model: nn.Module,
     optimizer: torch.optim.Optimizer,
     train_loader: torch.utils.data.DataLoader,
+    accelerator: Accelerator,
     val_loader: torch.utils.data.DataLoader | None = None,
-    test_loader: torch.utils.data.DataLoader | None = None,
     lr_scheduler: torch.optim.lr_scheduler._LRScheduler | None = None,
-    train_step: Callable = mu.train.train_step,
+    train_step: Callable = mu_train_step,
     **kwargs,
 ):
 
     # Accelerate
-
-    accelerator = Accelerator(
-        mixed_precision=kwargs["mixed_precision"],
-        log_with=[mu.trackers.AimTracker, mu.trackers.SimpleGeneralTracker],
-        gradient_accumulation_steps=kwargs["gradient_accumulation_steps"],
-        cpu=kwargs["use_cpu"],
-        # rng_types=None, # TODO: Implement RNG types
-        project_dir=kwargs["project_dir"],
-    )
     model, optimizer, train_loader = accelerator.prepare(
         model,
         optimizer,
@@ -39,12 +32,6 @@ def train(
         lr_scheduler = accelerator.prepare(lr_scheduler)
     if val_loader is not None:
         val_loader = accelerator.prepare(val_loader)
-    if test_loader is not None:
-        test_loader = accelerator.prepare(test_loader)
-    accelerator.init_trackers(
-        "llm",
-        kwargs,
-    )
 
     # Train
     train_steps = kwargs["train_steps"]
@@ -69,26 +56,29 @@ def train(
                 batch=batch,
                 optimizer=optimizer,
                 accelerator=accelerator,
+                lr_scheduler=lr_scheduler,
             )
 
             # Train metrics
-            for k, v in train_metrics.items():
-                v += outputs[k].item()  # TODO: Might need to use accelerator.gather
+            for k in train_metrics.keys():
+                train_metrics[k] += outputs[
+                    k
+                ].item()  # TODO: Might need to use accelerator.gather
 
             # Train logging
             if step % log_interval == 0:
-                train_metrics = mu.log_metrics(
+                train_metrics = log_metrics(
                     metrics=train_metrics,
                     step=step,
                     split="train",
-                    log_interval=log_interval,
+                    log_interval=log_interval if step > 0 else 1,
                     accelerator=accelerator,
                     progress=progress,
                 )
 
             # Validation
             if val_loader is not None and step % val_interval == 0:
-                mu.eval.test(
+                test(
                     model=model,
                     split="val",
                     test_loader=val_loader,

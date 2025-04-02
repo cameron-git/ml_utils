@@ -14,9 +14,14 @@ def log_metrics(
     accelerator: Accelerator,
     progress: tqdm | None = None,
 ):
-    metrics = {f"{split}_k": v / log_interval for k, v in metrics.items()}
+    keys = list(metrics.keys())
+    metrics = {f"{split}_{k}": v / log_interval for k, v in metrics.items()}
     if progress is not None:
-        progress.set_postfix(**metrics)
+        if hasattr(progress, "postfix_dict"):
+            progress.postfix_dict.update(metrics)
+        else:
+            progress.postfix_dict = metrics
+        progress.set_postfix(**progress.postfix_dict)
     accelerator.log(metrics, step=step)
-    new_metrics = {k: 0 for k in metrics.keys()}
+    new_metrics = {k: 0 for k in keys}
     return new_metrics

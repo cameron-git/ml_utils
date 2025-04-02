@@ -19,6 +19,7 @@ def test(
     step: int | None = None,
     max_test_steps: int | None = None,
 ):
+    test_loader = accelerator.prepare(test_loader)
     test_progress = False
     if progress is None:
         test_progress = True
@@ -33,8 +34,8 @@ def test(
         # Test step
         for test_step, batch in enumerate(test_loader):
             outputs = model(**batch)
-            for k, v in metrics.items():
-                v += outputs[k].item()
+            for k in metrics.keys():
+                metrics[k] += outputs[k].item()
             if test_progress:
                 progress.update(1)
                 progress.set_postfix(

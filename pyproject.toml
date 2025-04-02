@@ -15,3 +15,6 @@ dependencies = [
     "numpy",
     "torch",
 ]
+
+[tool.setuptools.packages.find]
+include = ["ml_utils*"]

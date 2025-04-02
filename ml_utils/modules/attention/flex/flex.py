@@ -53,7 +53,7 @@ class Attention(nn.Module):
             key = cache.update(f"{cache_key}_key", key, dim=-2)
             value = cache.update(f"{cache_key}_value", value, dim=-2)
 
-        out = flex_attention(
+        out = flex_attention.flex_attention(
             query=query,
             key=key,
             value=value,
