@@ -13,7 +13,7 @@ from aim import (
 
 from typing import Optional, Union, Dict, Any, Callable
 
-from ..utils.tracker import (
+from .utils import (
     generate_id,
     validate_experiment_name,
     update_yaml,
