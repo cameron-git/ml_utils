@@ -42,7 +42,8 @@ def generate_id():
     global WORDS_LIST
     timestamp = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
     words = random.choices(WORDS_LIST, k=2)
-    return f"{timestamp}_{"_".join(words)}"
+    words = "_".join(words)
+    return f"{timestamp}_{words}"
 
 
 def validate_experiment_name(name: str) -> bool:

@@ -95,7 +95,8 @@ class SimpleTracker:
                 values = yaml.safe_load(f)
         else:
             values = {}
-        key_ = f"{"last" if compare_fn is compare_fns.new else "best"}_{key}"
+        key_ = "last" if compare_fn is compare_fns.new else "best"
+        key_ = f"{key_}_{key}"
         values[key_] = compare_fn(
             value,
             values.get(key, None),
