@@ -1,6 +1,5 @@
 # Reference Llama training script
 # TODO: Selective Activation Checkpointing https://pytorch.org/blog/activation-checkpointing-techniques/
-# TODO: Gradient Accumulation
 # TODO: Training checkpointing
 
 # Imports
@@ -57,7 +56,8 @@ weight_decay = 1e-4
 # adam_betas = (0.9, 0.95)
 adam_betas = (0.9, 0.999)
 mixed_precision = "bf16"
-gradient_accumulation_steps = 1  # TODO: Implement gradient accumulation
+# NOTE: Will need to run more steps to get the same number of updates
+gradient_accumulation_steps = 1
 max_grad_norm = 1.0
 max_grad_value = None
 use_cpu = False

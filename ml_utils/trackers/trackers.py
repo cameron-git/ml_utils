@@ -76,6 +76,8 @@ class AimTracker(GeneralTracker):
                 Additional key word arguments passed along to the `Run.track` method.
         """
         for key, value in values.items():
+            if value is None:
+                continue
             self.writer.track(value, name=key, step=step, **kwargs)
 
     @on_main_process

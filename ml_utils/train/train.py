@@ -80,7 +80,7 @@ def train(
                     progress=progress,
                 )
                 accelerator.log(
-                    {"train_grad_norm": outputs["grad_norm"].item()},
+                    {"train_grad_norm": outputs["grad_norm"].item() if outputs["grad_norm"] is not None else None},
                     step=step,
                 )
 
