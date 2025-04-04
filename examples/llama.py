@@ -1,3 +1,8 @@
+# Reference Llama training script
+# TODO: Selective Activation Checkpointing https://pytorch.org/blog/activation-checkpointing-techniques/
+# TODO: Gradient Accumulation
+# TODO: Training checkpointing
+
 # Imports
 
 import torch
@@ -15,7 +20,7 @@ import ml_utils as mu
 # Environment Hyperparameters
 
 project_dir = "."
-run_name = "llm"
+run_name = "llama"
 wandb_project_name = "ut"
 
 
@@ -49,10 +54,12 @@ max_val_steps = 1000
 learning_rate = 1e-3
 warmup_steps = train_steps // 10
 weight_decay = 1e-4
-adam_betas = (0.9, 0.95)
+# adam_betas = (0.9, 0.95)
 adam_betas = (0.9, 0.999)
 mixed_precision = "bf16"
 gradient_accumulation_steps = 1  # TODO: Implement gradient accumulation
+max_grad_norm = 1.0
+max_grad_value = None
 use_cpu = False
 
 
@@ -182,6 +189,8 @@ kwargs = {
     "mixed_precision": mixed_precision,
     "gradient_accumulation_steps": gradient_accumulation_steps,
     "use_cpu": use_cpu,
+    "max_grad_norm": max_grad_norm,
+    "max_grad_value": max_grad_value,
     "dataset": dataset_name,
     "metric_names": metric_names,
 }

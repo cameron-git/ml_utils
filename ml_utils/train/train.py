@@ -39,6 +39,8 @@ def train(
     val_interval = kwargs["val_interval"]
     max_val_steps = kwargs["max_val_steps"]
     metric_names = kwargs["metric_names"]
+    max_grad_norm = kwargs.get("max_grad_norm", None)
+    max_grad_value = kwargs.get("max_grad_value", None)
 
     train_metrics = {k: 0 for k in metric_names}
     model.train()
@@ -57,6 +59,8 @@ def train(
                 optimizer=optimizer,
                 accelerator=accelerator,
                 lr_scheduler=lr_scheduler,
+                max_grad_norm=max_grad_norm,
+                max_grad_value=max_grad_value,
             )
 
             # Train metrics
@@ -74,6 +78,10 @@ def train(
                     log_interval=log_interval if step > 0 else 1,
                     accelerator=accelerator,
                     progress=progress,
+                )
+                accelerator.log(
+                    {"train_grad_norm": outputs["grad_norm"].item()},
+                    step=step,
                 )
 
             # Validation
