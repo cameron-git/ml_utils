@@ -1,12 +1,14 @@
 import torch
 import torch.nn as nn
 from accelerate import Accelerator
+import transformers
 from tqdm.auto import trange
 from typing import Callable
 
 from .train_step import train_step as mu_train_step
 from ..metrics import log_metrics
 from ..eval.test import test
+from ..generation import log_generation
 
 __all__ = ["train"]
 
@@ -15,6 +17,7 @@ def train(
     model: nn.Module,
     optimizer: torch.optim.Optimizer,
     train_loader: torch.utils.data.DataLoader,
+    tokenizer: transformers.PreTrainedTokenizerBase,
     accelerator: Accelerator,
     val_loader: torch.utils.data.DataLoader | None = None,
     lr_scheduler: torch.optim.lr_scheduler._LRScheduler | None = None,
@@ -41,6 +44,7 @@ def train(
     metric_names = kwargs["metric_names"]
     max_grad_norm = kwargs.get("max_grad_norm", None)
     max_grad_value = kwargs.get("max_grad_value", None)
+    seq_len = kwargs["seq_len"]
 
     train_metrics = {k: 0 for k in metric_names}
     model.train()
@@ -89,9 +93,6 @@ def train(
                     },
                     step=step,
                 )
-                accelerator.save_state(
-                    output_dir=f"{accelerator.project_dir}/checkpoints/{accelerator.start_time}/checkpoint_{step}",
-                )
 
             # Validation
             if val_loader is not None and step % val_interval == 0:
@@ -108,11 +109,19 @@ def train(
 
                 # Generate
 
-                # TODO: Implement generation
+                log_generation(
+                    model=model,
+                    tokenizer=tokenizer,
+                    max_length=seq_len,
+                    step=train_steps,
+                    accelerator=accelerator,
+                )
 
                 # Checkpoint
 
-                # TODO: Implement checkpointing
+                accelerator.save_state(
+                    output_dir=f"{accelerator.project_dir}/checkpoints/{accelerator.start_time}/checkpoint_{step}",
+                )
 
                 model.train()
 

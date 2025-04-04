@@ -1,6 +1,5 @@
 # Reference Llama training script
 # TODO: Selective Activation Checkpointing https://pytorch.org/blog/activation-checkpointing-techniques/
-# TODO: Generation
 
 # Imports
 
@@ -66,8 +65,8 @@ use_cpu = False
 # Accelerator
 
 trackers = [
-    mu.trackers.AimTracker(run_name=run_name, logging_dir=project_dir),
     mu.trackers.SimpleGeneralTracker(run_name=run_name, logging_dir=project_dir),
+    mu.trackers.AimTracker(run_name=run_name, logging_dir=project_dir),
     mu.trackers.WandBTracker(project_name=wandb_project_name, run_name=run_name),
 ]
 
@@ -210,6 +209,7 @@ mu.train.train(
     val_loader=val_loader,
     test_loader=test_loader,
     lr_scheduler=lr_scheduler,
+    tokenizer=tokenizer,
     accelerator=accelerator,
     **kwargs,
 )
@@ -232,7 +232,14 @@ if test_loader is not None:
 
 # Generate
 
-# TODO: Implement generation
+mu.generation.log_generation(
+    model=model,
+    tokenizer=tokenizer,
+    max_length=seq_len,
+    step=train_steps,
+    accelerator=accelerator,
+)
+
 
 # Save model
 

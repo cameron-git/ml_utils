@@ -7,12 +7,12 @@ from ..functional.rope import generate_rope, generate_rope_dynamic
 from ..functional.masks.flex import causal_block_mask
 from ..cache import Cache
 from ..modules.transformer import Transformer
+from ..generation import GenerationMixin
 
 __all__ = ["Llama"]
 
 
-class Llama(nn.Module):
-
+class Llama(nn.Module, GenerationMixin):
     def __init__(
         self,
         vocab_size: int,
@@ -78,6 +78,7 @@ class Llama(nn.Module):
         target_ids: Optional[torch.Tensor] = None,
         pos_ids: Optional[torch.Tensor] = None,
         cache: Optional[Cache] = None,
+        num_last_tokens: int = 0,
         **kwargs,
     ):
         activated = lambda k, d: k in d and d[k] is True
@@ -114,6 +115,9 @@ class Llama(nn.Module):
             x = out["x"]
             if activated("output_hidden_states", kwargs):
                 hidden_states += (x,)
+
+        if num_last_tokens > 0:
+            x = x[:, -num_last_tokens:]
 
         # Decode
         logits = self.decoder(x)
