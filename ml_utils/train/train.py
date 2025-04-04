@@ -80,8 +80,17 @@ def train(
                     progress=progress,
                 )
                 accelerator.log(
-                    {"train_grad_norm": outputs["grad_norm"].item() if outputs["grad_norm"] is not None else None},
+                    {
+                        "train_grad_norm": (
+                            outputs["grad_norm"].item()
+                            if outputs["grad_norm"] is not None
+                            else None
+                        )
+                    },
                     step=step,
+                )
+                accelerator.save_state(
+                    output_dir=f"{accelerator.project_dir}/checkpoints/{accelerator.start_time}/checkpoint_{step}",
                 )
 
             # Validation

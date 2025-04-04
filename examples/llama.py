@@ -1,24 +1,24 @@
 # Reference Llama training script
 # TODO: Selective Activation Checkpointing https://pytorch.org/blog/activation-checkpointing-techniques/
-# TODO: Training checkpointing
+# TODO: Generation
 
 # Imports
 
 import torch
 from torch.utils.data import DataLoader
 import datasets
-import transformers  # TODO: remove this dependency
-from accelerate import Accelerator
+import transformers  # TODO: replace with tokenizers
+import accelerate
 import random
 import numpy as np
-from tqdm.auto import trange
+import datetime
 
 import ml_utils as mu
 
 
 # Environment Hyperparameters
 
-project_dir = "."
+project_dir = "./.logs"
 run_name = "llama"
 wandb_project_name = "ut"
 
@@ -71,7 +71,7 @@ trackers = [
     mu.trackers.WandBTracker(project_name=wandb_project_name, run_name=run_name),
 ]
 
-accelerator = Accelerator(
+accelerator = accelerate.Accelerator(
     mixed_precision=mixed_precision,
     log_with=trackers,
     gradient_accumulation_steps=gradient_accumulation_steps,
@@ -79,6 +79,7 @@ accelerator = Accelerator(
     # rng_types=None, # TODO: Implement RNG types
     project_dir=project_dir,
 )
+accelerator.start_time = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
 
 
 # Data
@@ -235,8 +236,10 @@ if test_loader is not None:
 
 # Save model
 
-# TODO: Implement saving
+accelerator.save_model(
+    model, f"{project_dir}/checkpoints/{accelerator.start_time}/final"
+)
 
-# Wrap up
+# Cleanup
 
 accelerator.end_training()
