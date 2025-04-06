@@ -113,7 +113,7 @@ def train(
                     model=model,
                     tokenizer=tokenizer,
                     max_length=seq_len,
-                    step=train_steps,
+                    step=step,
                     accelerator=accelerator,
                 )
 

@@ -78,30 +78,9 @@ class AimTracker(GeneralTracker):
         for key, value in values.items():
             if value is None:
                 continue
+            if isinstance(value, str):
+                value = AimText(value)
             self.writer.track(value, name=key, step=step, **kwargs)
-
-    @on_main_process
-    def log_text(
-        self,
-        values: dict,
-        step: Optional[int] = None,
-        kwargs: Optional[Dict[str, dict]] = None,
-    ):
-        """
-        Logs `text` to the current run.
-
-        Args:
-            values (`Dict[str, str]`):
-                Values to be logged as key-value pairs. The values need to have type `str`.
-            step (`int`, *optional*):
-                The run step. If included, the log will be affiliated with this step.
-            kwargs (`Dict[str, dict]`):
-                Additional key word arguments passed along to the `Run.Text` and `Run.track` method specified by the
-                keys `aim_text` and `track`, respectively.
-        """
-
-        for key, value in values.items():
-            self.writer.track(AimText(value), name=key, step=step, **kwargs)
 
     @on_main_process
     def log_images(
@@ -197,27 +176,6 @@ class SimpleGeneralTracker(GeneralTracker):
         self.writer.log_values(values, step=step)
 
     @on_main_process
-    def log_text(
-        self,
-        values: dict,
-        step: Optional[int] = None,
-        kwargs: Optional[Dict[str, dict]] = None,
-    ):
-        """
-        Logs `text` to the current run.
-
-        Args:
-            values (`Dict[str, str]`):
-                Values to be logged as key-value pairs. The values need to have type `str`.
-            step (`int`, *optional*):
-                The run step. If included, the log will be affiliated with this step.
-            kwargs (`Dict[str, dict]`):
-                Additional key word arguments passed along to the `Run.Text` and `Run.track` method specified by the
-                keys `aim_text` and `track`, respectively.
-        """
-        self.writer.log_values(values, step=step)
-
-    @on_main_process
     def log_images(
         self,
         values: dict,
@@ -303,36 +261,18 @@ class WandBTracker(GeneralTracker):
             kwargs:
                 Additional key word arguments passed along to the `wandb.log` method.
         """
-        self.run.log(values, step=step, **kwargs)
-
-    @on_main_process
-    def log_text(self, values: dict, step: Optional[int] = None, **kwargs):
-        """
-        Logs `text` to the current run.
-
-        Args:
-            values (Dictionary `str` to `str`):
-                Values to be logged as key-value pairs. The values need to have type `str`.
-            step (`int`, *optional*):
-                The run step. If included, the log will be affiliated with this step.
-            kwargs:
-                Additional key word arguments passed along to the `wandb.log` method.
-        """
         import wandb
 
-        for k, v in values.items():
-            if isinstance(v, str):
-                table = wandb.Table(data=[[v]], columns=["Text"])
-                self.log({k: table}, step=step, **kwargs)
-            if isinstance(v, dict):
-                table = wandb.Table(
-                    data=[[v for v in v.values()]], columns=list(v.keys())
+        for key, value in values.items():
+            if value is None:
+                continue
+            if isinstance(value, str):
+                value = wandb.Table(data=[[value]], columns=["Text"])
+            if isinstance(value, dict):
+                value = wandb.Table(
+                    data=[[v for v in value.values()]], columns=list(value.keys())
                 )
-                self.log({k: table}, step=step, **kwargs)
-            else:
-                warnings.warn(
-                    f"Value for {k} is not a string or dictionary. Skipping.",
-                )
+            self.run.log({key: value}, step=step, **kwargs)
 
     @on_main_process
     def log_images(self, values: dict, step: Optional[int] = None, **kwargs):

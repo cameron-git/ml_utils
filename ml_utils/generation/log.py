@@ -28,7 +28,7 @@ def log_generation(
         temperature=temperature,
     )
     generated_text = tokenizer.decode(output[0], skip_special_tokens=True)
-    accelerator.log_text(
+    accelerator.log(
         {
             "generated_text": generated_text,
         },

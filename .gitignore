@@ -3,3 +3,4 @@ __pycache__
 .aim/
 .logs/
 wandb/
+build/

@@ -6,3 +6,5 @@ from .metrics import *
 from . import train
 from . import eval
 from . import generation
+from . import functional
+from . import cache

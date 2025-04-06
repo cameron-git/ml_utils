@@ -24,9 +24,9 @@ wandb_project_name = "ut"
 
 # Reproducibility
 
-torch.manual_seed(0)
-random.seed(0)
-np.random.seed(0)
+# torch.manual_seed(0)
+# random.seed(0)
+# np.random.seed(0)
 
 
 # Architecture Hyperparameters
@@ -67,7 +67,7 @@ use_cpu = False
 trackers = [
     mu.trackers.SimpleGeneralTracker(run_name=run_name, logging_dir=project_dir),
     mu.trackers.AimTracker(run_name=run_name, logging_dir=project_dir),
-    mu.trackers.WandBTracker(project_name=wandb_project_name, run_name=run_name),
+    # mu.trackers.WandBTracker(project_name=wandb_project_name, run_name=run_name),
 ]
 
 accelerator = accelerate.Accelerator(
