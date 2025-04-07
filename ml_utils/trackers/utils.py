@@ -3,6 +3,7 @@ import datetime
 import random
 import yaml
 import os
+import time
 import pandas as pd
 
 
@@ -41,6 +42,7 @@ def update_yaml(file_path, new_data):
 def generate_id():
     global WORDS_LIST
     timestamp = datetime.datetime.now().strftime("%y%m%d_%H%M%S")
+    random.seed(int(time.time() * 1000) % 2**32)
     words = random.choices(WORDS_LIST, k=2)
     words = "_".join(words)
     return f"{timestamp}_{words}"
