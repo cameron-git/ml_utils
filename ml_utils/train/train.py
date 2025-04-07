@@ -98,7 +98,7 @@ def train(
             # Validation
             if val_interval is not None and step % val_interval == 0:
                 # Validation metrics
-                if val_loader is None:
+                if val_loader is not None:
                     test(
                         model=model,
                         split="val",
