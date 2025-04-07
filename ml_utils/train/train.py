@@ -40,6 +40,7 @@ def train(
     train_steps = kwargs["train_steps"]
     log_interval = kwargs["log_interval"]
     val_interval = kwargs["val_interval"]
+    save_interval = kwargs["save_interval"]
     max_val_steps = kwargs["max_val_steps"]
     metric_names = kwargs["metric_names"]
     max_grad_norm = kwargs.get("max_grad_norm", None)
@@ -74,7 +75,7 @@ def train(
                 ].item()  # TODO: Might need to use accelerator.gather
 
             # Train logging
-            if step % log_interval == 0:
+            if log_interval is not None and step % log_interval == 0:
                 train_metrics = log_metrics(
                     metrics=train_metrics,
                     step=step,
@@ -95,20 +96,21 @@ def train(
                 )
 
             # Validation
-            if val_loader is not None and step % val_interval == 0:
-                test(
-                    model=model,
-                    split="val",
-                    test_loader=val_loader,
-                    accelerator=accelerator,
-                    progress=progress,
-                    metric_names=metric_names,
-                    step=step,
-                    max_test_steps=max_val_steps,
-                )
+            if val_interval is not None and step % val_interval == 0:
+                # Validation metrics
+                if val_loader is None:
+                    test(
+                        model=model,
+                        split="val",
+                        test_loader=val_loader,
+                        accelerator=accelerator,
+                        progress=progress,
+                        metric_names=metric_names,
+                        step=step,
+                        max_test_steps=max_val_steps,
+                    )
 
                 # Generate
-
                 log_generation(
                     model=model,
                     tokenizer=tokenizer,
@@ -117,13 +119,13 @@ def train(
                     accelerator=accelerator,
                 )
 
-                # Checkpoint
+                model.train()
 
+            # Checkpoint
+            if save_interval is not None and step % save_interval == 0 and step > 0:
                 accelerator.save_state(
                     output_dir=f"{accelerator.project_dir}/checkpoints/{accelerator.start_time}/checkpoint_{step}",
                 )
-
-                model.train()
 
             # Step
             step += 1
