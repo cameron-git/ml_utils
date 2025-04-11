@@ -21,7 +21,6 @@ def test(
 ):
     test_loader = accelerator.prepare(test_loader)
     test_progress = False
-    print(max_test_steps)
     if progress is None:
         test_progress = True
         try:
