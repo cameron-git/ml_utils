@@ -15,10 +15,87 @@ from .simple import SimpleTracker
 
 
 __all__ = [
+    "PrintTracker",
     "AimTracker",
     "SimpleGeneralTracker",
     "WandBTracker",
 ]
+
+
+class PrintTracker(GeneralTracker):
+    """
+    A `Tracker` class that prints the values to the console. Should be initialized at the start of your script.
+
+    Args:
+        run_name (`str`):
+            The name of the experiment run.
+        **kwargs (additional keyword arguments, *optional*):
+            Additional key word arguments passed along to the `Run.__init__` method.
+    """
+
+    name = "print"
+    requires_logging_directory = False
+
+    @on_main_process
+    def __init__(self, run_name: str, **kwargs):
+        print(f"PrintTracker initialized with run name: {run_name}")
+        print(f"Additional arguments: {kwargs}")
+
+    @property
+    def tracker(self):
+        return None
+
+    @on_main_process
+    def store_init_configuration(self, values: dict):
+        """
+        Logs `values` as hyperparameters for the run. Should be run at the beginning of your experiment.
+
+        Args:
+            values (`dict`):
+                Values to be stored as initial hyperparameters as key-value pairs.
+        """
+        print(f"Initial configuration: {values}")
+
+    @on_main_process
+    def log(self, values: dict, step: Optional[int], **kwargs):
+        """
+        Logs `values` to the current run.
+
+        Args:
+            values (`dict`):
+                Values to be logged as key-value pairs.
+            step (`int`, *optional*):
+                The run step. If included, the log will be affiliated with this step.
+            kwargs:
+                Additional key word arguments passed along to the `Run.track` method.
+        """
+        print(f"Logging step {step}: {values}, kwargs: {kwargs}")
+
+    @on_main_process
+    def log_images(
+        self,
+        values: dict,
+        step: Optional[int] = None,
+        kwargs: Optional[Dict[str, dict]] = None,
+    ):
+        """
+        Logs `images` to the current run.
+
+        Args:
+            values (`Dict[str, Union[np.ndarray, PIL.Image, Tuple[np.ndarray, str], Tuple[PIL.Image, str]]]`):
+                Values to be logged as key-value pairs. The values need to have type `np.ndarray` or PIL.Image. If a
+                tuple is provided, the first element should be the image and the second element should be the caption.
+            step (`int`, *optional*):
+                The run step. If included, the log will be affiliated with this step.
+            kwargs (`Dict[str, dict]`):
+                Additional key word arguments passed along to the `Run.Image` and `Run.track` method specified by the
+                keys `aim_image` and `track`, respectively.
+        """
+        print(f"Logging images at step {step}: {values.keys()}, kwargs: {kwargs}")
+
+    @on_main_process
+    def finish(self):
+        print("Finishing PrintTracker")
 
 
 class AimTracker(GeneralTracker):
@@ -292,38 +369,38 @@ class WandBTracker(GeneralTracker):
         for k, v in values.items():
             self.log({k: [wandb.Image(image) for image in v]}, step=step, **kwargs)
 
-    @on_main_process
-    def log_table(
-        self,
-        table_name: str,
-        columns: List[str] = None,
-        data: List[List[Any]] = None,
-        dataframe: Any = None,
-        step: Optional[int] = None,
-        **kwargs,
-    ):
-        """
-        Log a Table containing any object type (text, image, audio, video, molecule, html, etc). Can be defined either
-        with `columns` and `data` or with `dataframe`.
+    # @on_main_process
+    # def log_table(
+    #     self,
+    #     table_name: str,
+    #     columns: List[str] = None,
+    #     data: List[List[Any]] = None,
+    #     dataframe: Any = None,
+    #     step: Optional[int] = None,
+    #     **kwargs,
+    # ):
+    #     """
+    #     Log a Table containing any object type (text, image, audio, video, molecule, html, etc). Can be defined either
+    #     with `columns` and `data` or with `dataframe`.
 
-        Args:
-            table_name (`str`):
-                The name to give to the logged table on the wandb workspace
-            columns (list of `str`, *optional*):
-                The name of the columns on the table
-            data (List of List of Any data type, *optional*):
-                The data to be logged in the table
-            dataframe (Any data type, *optional*):
-                The data to be logged in the table
-            step (`int`, *optional*):
-                The run step. If included, the log will be affiliated with this step.
-        """
-        import wandb
+    #     Args:
+    #         table_name (`str`):
+    #             The name to give to the logged table on the wandb workspace
+    #         columns (list of `str`, *optional*):
+    #             The name of the columns on the table
+    #         data (List of List of Any data type, *optional*):
+    #             The data to be logged in the table
+    #         dataframe (Any data type, *optional*):
+    #             The data to be logged in the table
+    #         step (`int`, *optional*):
+    #             The run step. If included, the log will be affiliated with this step.
+    #     """
+    #     import wandb
 
-        values = {
-            table_name: wandb.Table(columns=columns, data=data, dataframe=dataframe)
-        }
-        self.log(values, step=step, **kwargs)
+    #     values = {
+    #         table_name: wandb.Table(columns=columns, data=data, dataframe=dataframe)
+    #     }
+    #     self.log(values, step=step, **kwargs)
 
     @on_main_process
     def finish(self):

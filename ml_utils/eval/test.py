@@ -21,10 +21,15 @@ def test(
 ):
     test_loader = accelerator.prepare(test_loader)
     test_progress = False
+    print(max_test_steps)
     if progress is None:
         test_progress = True
+        try:
+            stop = max_test_steps if max_test_steps is not None else len(test_loader)
+        except:
+            stop = 0
         progress = trange(
-            max_test_steps if max_test_steps is not None else len(test_loader),
+            stop,
             disable=not accelerator.is_local_main_process,
         )
     progress.set_description(f"Testing {split}")
