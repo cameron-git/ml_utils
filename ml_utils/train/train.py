@@ -123,6 +123,7 @@ def train(
 
             # Checkpoint
             if save_interval is not None and step % save_interval == 0 and step > 0:
+                accelerator.wait_for_everyone()
                 accelerator.save_state(
                     output_dir=f"{accelerator.project_dir}/checkpoints/{accelerator.start_time}/checkpoint_{step}",
                 )

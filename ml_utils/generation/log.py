@@ -16,6 +16,7 @@ def log_generation(
     min_p: float = 0.0,
     temperature: float = 1.0,
 ):
+    model = accelerator.unwrap_model(model)
     model.eval()
     device_type = next(iter(model.parameters())).device.type
     input_ids = tokenizer("", return_tensors="pt")["input_ids"].to(device_type)
