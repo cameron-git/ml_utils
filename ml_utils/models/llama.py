@@ -67,7 +67,10 @@ class Llama(nn.Module, GenerationMixin):
                 for _ in range(num_layers)
             ]
         )
-        self.decoder = nn.Sequential(norm(embed_dim), nn.Linear(embed_dim, vocab_size))
+        self.decoder = nn.Sequential(
+            norm(embed_dim),
+            nn.Linear(embed_dim, vocab_size, bias=False),
+        )
         pos_emb = generate_rope(max_seq_len, head_dim)
         self.register_buffer("pos_emb_cos", pos_emb["cos"])
         self.register_buffer("pos_emb_sin", pos_emb["sin"])

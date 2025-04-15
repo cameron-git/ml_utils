@@ -15,9 +15,9 @@ class MLP(nn.Module):
         self.mlp_dim = mlp_dim
         self.activation = activation
 
-        self.fc1 = nn.Linear(embed_dim, mlp_dim)
-        self.fc2 = nn.Linear(embed_dim, mlp_dim)
-        self.fc3 = nn.Linear(mlp_dim, embed_dim)
+        self.fc1 = nn.Linear(embed_dim, mlp_dim, bias=False)
+        self.fc2 = nn.Linear(embed_dim, mlp_dim, bias=False)
+        self.fc3 = nn.Linear(mlp_dim, embed_dim, bias=False)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         x1 = self.activation(self.fc1(x))
