@@ -38,6 +38,10 @@ def test(
         # Test step
         for test_step, batch in enumerate(test_loader):
             outputs = model(**batch)
+            not_in_outputs = set(metrics.keys()) - set(outputs.keys())
+            if not_in_outputs:
+                for k in not_in_outputs:
+                    metrics.pop(k, None)
             for k in metrics.keys():
                 metrics[k] += outputs[k].item()
             if test_progress:
