@@ -75,6 +75,7 @@ def decode(
             input_ids,
             pos_ids=pos_ids,
             cache=cache,
+            num_last_tokens=1,
         )
         logits = output["logits"]
         return logits[..., :vocab_size] if vocab_size is not None else logits
@@ -89,6 +90,7 @@ def decode(
         return False
 
     sequences = [input_ids]
+
     while not should_stop(sequences[-1], inference_params):
         logits = get_logits(sequences[-1], inference_params)
         inference_params.seqlen_offset += sequences[-1].shape[1]
