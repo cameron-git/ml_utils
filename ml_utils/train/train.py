@@ -83,7 +83,9 @@ def train(
                     metrics=train_metrics,
                     step=step,
                     split="train",
-                    log_interval=log_interval if step > 0 else 1,
+                    log_interval=(
+                        log_interval * gradient_accumulation_steps if step > 0 else 1
+                    ),
                     accelerator=accelerator,
                     progress=progress,
                 )
