@@ -19,7 +19,7 @@ def log_generation(
     model = accelerator.unwrap_model(model)
     model.eval()
     device_type = next(iter(model.parameters())).device.type
-    input_ids = tokenizer(" ", return_tensors="pt")["input_ids"].to(device_type)
+    input_ids = tokenizer("", return_tensors="pt")["input_ids"].to(device_type)
     output = model.generate(
         input_ids=input_ids,
         max_length=max_length,
