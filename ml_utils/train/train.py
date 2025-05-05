@@ -37,6 +37,7 @@ def train(
         val_loader = accelerator.prepare(val_loader)
 
     # Train
+    gradient_accumulation_steps = kwargs.get("gradient_accumulation_steps", 1)
     train_steps = kwargs["train_steps"]
     log_interval = kwargs["log_interval"]
     val_interval = kwargs["val_interval"]
@@ -50,6 +51,7 @@ def train(
     train_metrics = {k: 0 for k in metric_names}
     model.train()
     step = 0
+    substep = 0
     progress = trange(
         train_steps,
         desc="Training",
@@ -57,6 +59,7 @@ def train(
     )
     while step < train_steps:
         for batch in train_loader:
+            progress.set_description("Training")
             # Train step
             outputs = train_step(
                 model=model,
@@ -90,7 +93,12 @@ def train(
                             outputs["grad_norm"].item()
                             if outputs["grad_norm"] is not None
                             else None
-                        )
+                        ),
+                        "learning_rate": (
+                            lr_scheduler.get_last_lr()[0]
+                            if lr_scheduler is not None
+                            else None
+                        ),
                     },
                     step=step,
                 )
@@ -129,9 +137,14 @@ def train(
                 )
 
             # Step
-            step += 1
-            progress.update(1)
-            progress.set_description("Training")
+            step += 1 / gradient_accumulation_steps
+            progress.update(1 / gradient_accumulation_steps)
+            substep += 1
+            if substep >= gradient_accumulation_steps:
+                substep = 0
+                step = round(step)
+                progress.n = step
+                progress.refresh()
             if train_steps <= step:
                 break
 
