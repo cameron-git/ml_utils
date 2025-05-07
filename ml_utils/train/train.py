@@ -4,6 +4,7 @@ from accelerate import Accelerator
 import transformers
 from tqdm.auto import trange
 from typing import Callable
+import datetime
 
 from .train_step import train_step as mu_train_step
 from ..metrics import log_metrics
@@ -97,10 +98,11 @@ def train(
                             else None
                         ),
                         "learning_rate": (
-                            lr_scheduler.get_last_lr()[0]
+                            lr_scheduler.get_last_lr()[0]/accelerator.num_processes
                             if lr_scheduler is not None
                             else None
                         ),
+                        "timestep": datetime.datetime.now().strftime("%y%m%d_%H%M%S"),
                     },
                     step=step,
                 )
