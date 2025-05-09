@@ -32,7 +32,7 @@ def generate_rope_dynamic(
         torch.pow(base, torch.arange(0, head_dim, 2, dtype=torch.float32) / head_dim)
     ).to(pos_ids.device)
     f = pos_ids[..., None].type(theta.dtype) @ theta[None, :]
-    f = f.repeat_interleave(2, dim=-1)
+    f = f.repeat_interleave(2, dim=-1).unsqueeze(1)
     cos = f.cos()
     sin = f.sin()
     return {"cos": cos, "sin": sin}
